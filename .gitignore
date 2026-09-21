@@ -6,6 +6,10 @@ data/
 *.fif
 *.fif.gz
 
+# Output files
+*.html
+*.png
+
 # Other files to ignore
 *.docx
 *.xlsx
