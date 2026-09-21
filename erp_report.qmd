@@ -1,5 +1,5 @@
 ---
-title: "ERP analysis report (customise to fit your topic)"
+title: "ERP analysis report (customise title to fit your topic)"
 author: "Your name"
 date: today
 format: 
@@ -8,7 +8,7 @@ format:
         toc: true
         toc-depth: 3
         code-fold: true
-        theme: flatly
+        theme: flatly # adapt this to a theme of your choice if you'd like
 execute:
     warning: false
     message: false
@@ -22,16 +22,15 @@ from pathlib import Path
 
 from mini_mne import SimpleRaw, SimpleEpoch, grand_average, plot_evokeds
 
+from scripts.preproc import preprocess
+
 ```
 
 ```{python}
 # Specify the required paths for your analysis
-# Note that we now include folders for saving intermediate results
+# Note that we now include a folder for saving preprocessed data
 RAW_PATH = Path("data/raw")
 PROCESSED_PATH = Path("data/processed")
-EPOCH_PATH = Path("data/epochs")
-SS_AVG_PATH = Path("data/ss_averages")
-GRAND_AVG_PATH = Path("data/grand_averages")
 ```
 
 ## Introduction
@@ -92,10 +91,94 @@ REJECT = {
 
 ## Data analysis
 
-#### Preprocessing
+### Preprocessing
 
 ```{python}
+#| eval: true # set this to false if you don't want preprocessing to recompute
+#| output: false # this suppresses any output
 
+for raw_file in RAW_PATH.glob("*_raw.fif.gz"):
+
+    # extract subject number
+    subj_ID = raw_file.stem.split("_")[0]
+
+    # read in raw file 
+    raw = SimpleRaw(raw_file)
+
+    # preprocess raw file
+    # note how we draw on a custom preprocessing function here
+    processed = preprocess(raw, 
+                            reref_params = REFERENCE, 
+                            filter_low_cutoff = FILTER_SETTINGS["low_cutoff"], 
+                            filter_high_cutoff = FILTER_SETTINGS["high_cutoff"])
+    
+    processed.save(PROCESSED_PATH / f"{subj_ID}_raw.fif.gz", overwrite = True)
 
 
 ```
+
+### Epoching and averaging
+
+```{python}
+#| output: false
+
+# initialise empty dictionary to hold single-subject averages
+ss_avs = {}
+
+for cond in CONDITIONS:
+    ss_avs[cond] = []
+
+for processed_file in PROCESSED_PATH.glob("*_raw.fif.gz"):
+    
+    # read in preprocessed file
+    processed = SimpleRaw(processed_file)
+
+    # extract events
+    events, event_id = processed.get_events()
+
+    # epoch data
+    epochs = SimpleEpoch(processed, events, event_id, tmin = TMIN, tmax = TMAX, baseline = BASELINE, reject = REJECT)
+
+    # subset epochs and average by condition 
+    for cond in CONDITIONS:
+        av = epochs[cond].average()
+        ss_avs[cond].append(av)
+
+```
+
+### Grand average
+
+```{python}
+#| output: false
+
+# create an empty dict to hold our grand averages
+grand_avs = {}
+
+for cond in CONDITIONS:
+    grand = grand_average(ss_avs[cond])
+    grand_avs[cond] = grand
+```
+
+## Results
+
+### Grand average: expected effect
+
+Plot the electrode deemed most representative for the effect by Kappenman et al. 
+Set the parameters for the specified analysis window, which will include dotted vertical lines marking the analysis window on the plot.
+
+```{python}
+selected_electrode = "FCz"
+plot_title = "Grand average: Compatible versus incompatible Flanker stimuli"
+analysis_window_start = 0.2
+analysis_window_end = 0.4
+
+plot_evokeds(grand_avs, picks = selected_electrode, invert_y = True, title = plot_title, vlines = [analysis_window_start, analysis_window_end])
+
+
+```
+
+## Discussion and reflection
+
+Provide a brief discussion of the effect that you observed. Were you able to replicate the ERP component as observed by Kappenman et al.?
+
+What did you learn by applying the analysis process to a new dataset?
