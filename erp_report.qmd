@@ -12,6 +12,7 @@ format:
 execute:
     warning: false
     message: false
+bibliography: "erp_report.bib"
 ---
 
 ## Setup
@@ -22,6 +23,7 @@ from pathlib import Path
 
 from mini_mne import SimpleRaw, SimpleEpoch, grand_average, plot_evokeds
 
+# Note how we can import a custom preprocessing function from a local script
 from scripts.preproc import preprocess
 
 ```
@@ -35,7 +37,7 @@ PROCESSED_PATH = Path("data/processed")
 
 ## Introduction
 
-Provide an introduction to the ERP component of your choice here.
+Provide an introduction to the ERP component of your choice here. This should include a brief literature review -- see report instructions for details.
 Use appropriate subheadings as required: adapt the ones below, create new ones or delete as needed.
 
 ### Intro subheading 1
@@ -44,17 +46,24 @@ Use appropriate subheadings as required: adapt the ones below, create new ones o
 
 ## Methods
 
-Complete the following subsections using the information from Kappenman et al. 
+Complete the following subsections using the information from @kappenman2021. Don't forget to mention that the data are from the ERP CORE resource under a Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0). 
 
 ### Participants
 
+Provide information on the number of participants and their demographics (sex, age, handedness) as well as the inclusion criteria for the study.
+
 ### Procedure
 
-### EEG recording and preprocessing
+Describe the task that participants completed. This should be tailored to the task / component that you chose to analyse.
+
+### EEG recording
+
+Describe the EEG recording parameters: amplifier and type of cap used, electrode positions, CMS / DRL electrode positions, EOG electrode positions, and filter parameters.
 
 ### Analysis parameters
 
-Choose these parameters approprite for the component that you are analysing. See the Kappenman et al. paper for details.
+Choose these parameters appropriate for the component that you are analysing. Use those recommended by @kappenman2021; see their Table 1. This holds for all parameters except for the filter parameters; for these, you can stick to the example parameters provided below.
+Describe the parameters in this section and also modify the code accordingly
 
 #### Preprocessing parameters
 
@@ -163,12 +172,13 @@ for cond in CONDITIONS:
 
 ### Grand average: expected effect
 
-Plot the electrode deemed most representative for the effect by Kappenman et al. 
+Plot the electrode deemed most representative for the effect by @kappenman2021.
 Set the parameters for the specified analysis window, which will include dotted vertical lines marking the analysis window on the plot.
+Note: for some components, @kappenman2021 refer to two electrode sites. If this is the case for your chosen component, the analysis requires a consideration of lateralisation; please make an appointment to discuss the required analysis tweaks with Ina.
 
 ```{python}
 selected_electrode = "FCz"
-plot_title = "Grand average: Compatible versus incompatible Flanker stimuli"
+plot_title = "Grand average for N2: Incompatible versus compatible Flanker stimuli"
 analysis_window_start = 0.2
 analysis_window_end = 0.4
 
@@ -179,6 +189,11 @@ plot_evokeds(grand_avs, picks = selected_electrode, invert_y = True, title = plo
 
 ## Discussion and reflection
 
-Provide a brief discussion of the effect that you observed. Were you able to replicate the ERP component as observed by Kappenman et al.?
+Provide a brief discussion of the effect that you observed. Were you able to replicate the ERP component as observed by @kappenman2021? If not, what was different in your grand average ERP? 
 
 What did you learn by applying the analysis process to a new dataset?
+
+## References
+
+*Note: this document is set up to automatically generate a reference list via a bib file. We will look at how to do this in the week 9 workshop.*
+
